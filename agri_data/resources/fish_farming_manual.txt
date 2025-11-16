@@ -1,0 +1,160 @@
+
+# Fish Farming Starter Manual - Tilapia Production
+
+## Introduction
+Tilapia is ideal for Zimbabwe's climate and grows well in ponds and tanks.
+
+## Getting Started
+
+### Site Selection
+- Reliable water source
+- Good soil for pond construction
+- Flat or gently sloping land
+- Away from flood areas
+
+### Pond Construction
+**Size:** 200-500 m²
+**Depth:** 1-1.5 meters
+**Shape:** Rectangular preferred
+**Bottom:** Slightly sloped for drainage
+
+### Water Quality Requirements
+- Temperature: 25-30°C (optimal)
+- pH: 6.5-8.5
+- Dissolved Oxygen: >5 mg/L
+- Ammonia: <0.1 mg/L
+
+## Stocking
+
+### Fingerling Selection
+- Size: 5-10 grams
+- Source: Reputable hatcheries
+- Health: Active, no deformities
+
+### Stocking Density
+- Extensive: 1-2 fish/m²
+- Semi-intensive: 3-5 fish/m²
+- Intensive: 5-10 fish/m²
+
+## Feeding
+
+### Feed Types
+- Commercial pellets (32-40% protein)
+- Farm-made feed
+- Supplementary feeds
+
+### Feeding Schedule
+- Fingerlings: 4-5 times daily
+- Juveniles: 3 times daily
+- Adults: 2 times daily
+
+### Feed Amount
+- 3-5% of body weight daily
+- Adjust based on growth
+
+## Water Management
+
+### Water Quality Monitoring
+- Test pH weekly
+- Check temperature daily
+- Monitor oxygen levels
+- Watch for ammonia buildup
+
+### Pond Maintenance
+- Remove debris regularly
+- Partial water changes (10-20% weekly)
+- Clean filters/aerators
+- Control algae growth
+
+## Disease Prevention
+
+### Common Diseases
+**Bacterial Infections:**
+- Symptoms: Lesions, fin rot
+- Treatment: Antibiotics (veterinary advice)
+
+**Parasites:**
+- Symptoms: Flashing, scratching
+- Treatment: Salt baths, proper medication
+
+**Fungal Infections:**
+- Symptoms: Cotton-like growth
+- Treatment: Antifungal medication
+
+### Prevention
+- Maintain good water quality
+- Avoid overstocking
+- Quarantine new fish
+- Proper nutrition
+
+## Growth and Harvesting
+
+### Growth Timeline
+- Fingerling to market size: 6-8 months
+- Market size: 300-500 grams
+
+### Harvesting Methods
+- Total harvest: Drain pond
+- Partial harvest: Seine net
+- Selective harvest: Cast net
+
+### Post-Harvest Handling
+- Clean immediately
+- Gut and scale
+- Ice or process quickly
+- Maintain cold chain
+
+## Economics
+
+### Initial Investment (0.05 ha pond)
+- Pond construction: $1,500-2,500
+- Fingerlings: $200-300
+- Feed (6 months): $500-800
+- Equipment: $300-500
+**Total: $2,500-4,100**
+
+### Revenue (per cycle)
+- Production: 1,500-2,000 kg
+- Price: $3-4/kg
+- Gross income: $4,500-8,000
+- Net profit: $2,000-4,000
+
+### ROI Timeline
+- Break-even: 1-2 years
+- Good management: High profitability
+
+## Marketing
+
+### Market Channels
+- Local markets
+- Supermarkets
+- Hotels and restaurants
+- Fish traders
+- Direct consumers
+
+### Value Addition
+- Smoked fish
+- Filleted fish
+- Fish powder
+- Fish sausages
+
+## Record Keeping
+- Stock records
+- Feeding records
+- Water quality logs
+- Financial records
+- Mortality records
+
+## Support Services
+- Veterinary services
+- Extension officers
+- Fish farmers associations
+- Training programs
+
+## Contact Information
+Department of Fisheries: +263 [number]
+Aquaculture Association: +263 [number]
+
+---
+© 2024 AgriBot Pro | Amaryllis Success
+        
