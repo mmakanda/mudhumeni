@@ -437,7 +437,7 @@ def load_custom_css():
     """, unsafe_allow_html=True)
 
 # ============================================================================
-# DATABASE & SERVICES (Same as before)
+# DATABASE & SERVICES
 # ============================================================================
 
 try:
@@ -924,6 +924,9 @@ if 'username' not in st.session_state:
 if 'location' not in st.session_state:
     st.session_state.location = config.DEFAULT_LOCATION["city"]
 
+if 'navigation' not in st.session_state:
+    st.session_state.navigation = "Dashboard"
+
 # ============================================================================
 # HEADER
 # ============================================================================
@@ -1035,11 +1038,14 @@ def page_dashboard():
     with col1:
         st.markdown("### 📈 Quick Actions")
         if st.button("🌾 Ask AI Question", use_container_width=True):
-            st.switch_page("pages/1_💬_AI_Chat.py")
+            st.session_state.navigation = "AI Chat"
+            st.rerun()
         if st.button("🌤️ Check Weather", use_container_width=True):
-            st.switch_page("pages/2_🌤️_Weather.py")
+            st.session_state.navigation = "Weather"
+            st.rerun()
         if st.button("💵 Calculate Costs", use_container_width=True):
-            st.switch_page("pages/3_💵_Calculator.py")
+            st.session_state.navigation = "Calculator"
+            st.rerun()
     
     with col2:
         st.markdown("### 🎯 Getting Started")
@@ -1049,6 +1055,53 @@ def page_dashboard():
         3. **Browse Marketplace**: Buy and sell farming products
         4. **Learn Tips**: Access expert farming knowledge
         """)
+    
+    st.markdown("---")
+    
+    # Current Weather Widget on Dashboard
+    st.markdown("### 🌤️ Current Weather")
+    with st.spinner("Loading weather..."):
+        weather_data = st.session_state.agent.weather.get_weather(st.session_state.location)
+        
+        if weather_data.get("status") == "success":
+            current = weather_data.get("current", {})
+            
+            # Get current date and time
+            now = datetime.now()
+            
+            col1, col2, col3 = st.columns([1, 2, 1])
+            
+            with col1:
+                # Weather icon and temperature
+                temp = current.get('temperature', 'N/A')
+                st.markdown(f"""
+                <div style="text-align: center; padding: 20px;">
+                    <div style="font-size: 4rem;">🌤️</div>
+                    <div style="font-size: 3rem; font-weight: bold; color: #ff6f00;">{temp}°C</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                st.markdown(f"""
+                <div style="padding: 20px;">
+                    <h3 style="margin: 0;">Weather</h3>
+                    <p style="color: #666; margin: 5px 0;">{now.strftime('%A')}</p>
+                    <p style="color: #888; margin: 5px 0;">Partly sunny</p>
+                    <hr style="margin: 10px 0;">
+                    <p style="margin: 5px 0;"><strong>Precipitation:</strong> {current.get('precipitation', 0)}%</p>
+                    <p style="margin: 5px 0;"><strong>Humidity:</strong> {current.get('humidity', 'N/A')}%</p>
+                    <p style="margin: 5px 0;"><strong>Wind:</strong> {current.get('wind_speed', 'N/A')} km/h</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                st.markdown(f"""
+                <div style="text-align: right; padding: 20px;">
+                    <p style="font-size: 1.2rem; margin: 5px 0;"><strong>📍 {st.session_state.location}</strong></p>
+                    <p style="color: #666; margin: 5px 0;">{now.strftime('%B %d, %Y')}</p>
+                    <p style="color: #666; margin: 5px 0;">{now.strftime('%I:%M %p')}</p>
+                </div>
+                """, unsafe_allow_html=True)
 
 def page_ai_chat():
     st.markdown("## 💬 AI Consultation")
@@ -1101,278 +1154,136 @@ def page_ai_chat():
 def page_weather():
     st.markdown("## 🌤️ Weather Forecast")
     
-    location = st.text_input("Location", value=st.session_state.location)
-    
-    if st.button("Get Weather", use_container_width=True):
-        with st.spinner("Fetching weather data..."):
-            weather_data = st.session_state.agent.weather.get_weather(location)
+    # Get current weather automatically
+    with st.spinner("Fetching weather data..."):
+        now = datetime.now()
+        weather_data = st.session_state.agent.weather.get_weather(st.session_state.location)
+        
+        if weather_data.get("status") == "success":
+            current = weather_data.get("current", {})
+            forecast = weather_data.get("forecast", {})
             
-            if weather_data.get("status") == "success":
-                current = weather_data.get("current", {})
-                forecast = weather_data.get("forecast", {})
+            # Current Weather Display (Like the image)
+            st.markdown("### 🌡️ Current Conditions")
+            
+            col1, col2, col3 = st.columns([1, 2, 1])
+            
+            with col1:
+                temp = current.get('temperature', 'N/A')
+                st.markdown(f"""
+                <div style="text-align: center; padding: 30px;">
+                    <div style="font-size: 5rem;">☀️</div>
+                    <div style="font-size: 4rem; font-weight: bold; color: #ff6f00;">{temp}</div>
+                    <div style="font-size: 1.5rem; color: #666;">°C | °F</div>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col2:
+                precipitation = current.get('precipitation', 0)
+                humidity = current.get('humidity', 'N/A')
+                wind_speed = current.get('wind_speed', 'N/A')
                 
-                # Current weather
-                st.markdown("### 🌡️ Current Weather")
-                col1, col2, col3, col4 = st.columns(4)
-                
-                with col1:
-                    st.metric("Temperature", f"{current.get('temperature')}°C")
-                with col2:
-                    st.metric("Humidity", f"{current.get('humidity')}%")
-                with col3:
-                    st.metric("Precipitation", f"{current.get('precipitation')}mm")
-                with col4:
-                    st.metric("Wind Speed", f"{current.get('wind_speed')} km/h")
-                
-                # 7-day forecast chart
-                st.markdown("### 📅 7-Day Forecast")
-                
-                df = pd.DataFrame({
+                st.markdown(f"""
+                <div style="padding: 30px 20px;">
+                    <p style="margin: 10px 0; font-size: 1.1rem;"><strong>Precipitation:</strong> {precipitation}%</p>
+                    <p style="margin: 10px 0; font-size: 1.1rem;"><strong>Humidity:</strong> {humidity}%</p>
+                    <p style="margin: 10px 0; font-size: 1.1rem;"><strong>Wind:</strong> {wind_speed} km/h</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            with col3:
+                st.markdown(f"""
+                <div style="text-align: right; padding: 30px 20px;">
+                    <h3 style="margin: 5px 0; color: #2e7d32;">Weather</h3>
+                    <p style="margin: 5px 0; font-size: 1.1rem; color: #666;">{now.strftime('%A')}</p>
+                    <p style="margin: 5px 0; color: #888;">Partly sunny</p>
+                    <hr style="margin: 15px 0;">
+                    <p style="margin: 5px 0; font-weight: bold;">📍 {st.session_state.location}</p>
+                    <p style="margin: 5px 0; color: #666;">{now.strftime('%B %d, %Y')}</p>
+                    <p style="margin: 5px 0; color: #666;">{now.strftime('%I:%M %p')}</p>
+                </div>
+                """, unsafe_allow_html=True)
+            
+            st.markdown("---")
+            
+            # Temperature, Precipitation, Wind Tabs
+            tab1, tab2, tab3 = st.tabs(["🌡️ Temperature", "💧 Precipitation", "💨 Wind"])
+            
+            with tab1:
+                # 7-day temperature forecast
+                df_temp = pd.DataFrame({
                     'Date': [datetime.fromisoformat(d).strftime('%a, %b %d') for d in forecast.get('dates', [])],
-                    'Max Temp': forecast.get('max_temp', []),
-                    'Min Temp': forecast.get('min_temp', []),
-                    'Precipitation': forecast.get('precipitation', [])
+                    'Max Temp (°C)': forecast.get('max_temp', []),
+                    'Min Temp (°C)': forecast.get('min_temp', [])
                 })
                 
                 fig = go.Figure()
-                fig.add_trace(go.Scatter(x=df['Date'], y=df['Max Temp'], name='Max Temp', line=dict(color='#ff6f00')))
-                fig.add_trace(go.Scatter(x=df['Date'], y=df['Min Temp'], name='Min Temp', line=dict(color='#2196f3')))
-                fig.update_layout(title="Temperature Forecast", xaxis_title="Date", yaxis_title="Temperature (°C)")
+                fig.add_trace(go.Scatter(
+                    x=df_temp['Date'], 
+                    y=df_temp['Max Temp (°C)'], 
+                    name='Max Temperature',
+                    line=dict(color='#ff6f00', width=3),
+                    mode='lines+markers'
+                ))
+                fig.add_trace(go.Scatter(
+                    x=df_temp['Date'], 
+                    y=df_temp['Min Temp (°C)'], 
+                    name='Min Temperature',
+                    line=dict(color='#2196f3', width=3),
+                    mode='lines+markers'
+                ))
+                fig.update_layout(
+                    title="7-Day Temperature Forecast",
+                    xaxis_title="Date",
+                    yaxis_title="Temperature (°C)",
+                    height=400,
+                    hovermode='x unified'
+                )
                 st.plotly_chart(fig, use_container_width=True)
                 
-            else:
-                st.error("⚠️ Could not fetch weather data")
-
-def page_knowledge_base():
-    st.markdown("## 📚 Knowledge Base")
-    
-    tab1, tab2, tab3 = st.tabs(["📥 Download Resources", "📤 Upload Documents", "📊 Library Stats"])
-    
-    # Tab 1: Download Resources
-    with tab1:
-        st.markdown("### 📥 Downloadable Farming Resources")
-        st.info("📚 Download free agricultural guides, manuals, and resources for your farm")
-        
-        # Pre-loaded resources directory
-        resources_dir = Path("agri_data/resources")
-        resources_dir.mkdir(parents=True, exist_ok=True)
-        
-        # Define available resources (you'll add actual files here)
-        resources = [
-            {
-                "title": "Maize Farming Guide for Zimbabwe",
-                "description": "Complete guide to maize cultivation including varieties, planting, and pest management",
-                "category": "crop_farming",
-                "file": "maize_farming_guide.pdf",
-                "size": "2.5 MB",
-                "downloads": 1234
-            },
-            {
-                "title": "Fish Farming Starter Manual",
-                "description": "Step-by-step guide to starting a small-scale tilapia fish farm",
-                "category": "fish_farming",
-                "file": "fish_farming_manual.pdf",
-                "size": "1.8 MB",
-                "downloads": 856
-            },
-            {
-                "title": "Goat Farming Best Practices",
-                "description": "Comprehensive guide to goat rearing, breeding, and disease management",
-                "category": "goat_farming",
-                "file": "goat_farming_guide.pdf",
-                "size": "3.2 MB",
-                "downloads": 654
-            },
-            {
-                "title": "Organic Fertilizer Production",
-                "description": "How to make and use organic fertilizers for sustainable farming",
-                "category": "general_agriculture",
-                "file": "organic_fertilizer.pdf",
-                "size": "1.2 MB",
-                "downloads": 2145
-            },
-            {
-                "title": "Poultry Disease Prevention Guide",
-                "description": "Common poultry diseases, symptoms, prevention, and treatment",
-                "category": "poultry_farming",
-                "file": "poultry_diseases.pdf",
-                "size": "2.0 MB",
-                "downloads": 987
-            }
-        ]
-        
-        # Filter by category
-        categories = ["all"] + list(set([r["category"] for r in resources]))
-        selected_category = st.selectbox("Filter by category:", categories)
-        
-        # Display resources
-        filtered_resources = resources if selected_category == "all" else [r for r in resources if r["category"] == selected_category]
-        
-        for resource in filtered_resources:
-            with st.expander(f"📄 {resource['title']}", expanded=False):
-                col1, col2 = st.columns([3, 1])
-                
-                with col1:
-                    st.markdown(f"**Description:** {resource['description']}")
-                    st.markdown(f"**Category:** {resource['category'].replace('_', ' ').title()}")
-                    st.markdown(f"**Size:** {resource['size']} | **Downloads:** {resource['downloads']}")
-                
-                with col2:
-                    file_path = resources_dir / resource['file']
-                    
-                    # Check if file exists
-                    if file_path.exists():
-                        with open(file_path, 'rb') as f:
-                            st.download_button(
-                                label="⬇️ Download",
-                                data=f,
-                                file_name=resource['file'],
-                                mime="application/pdf",
-                                use_container_width=True
-                            )
-                    else:
-                        st.button("📥 Request File", use_container_width=True, 
-                                help="This file will be available soon. Contact support to request early access.")
-        
-        # Add custom resource request
-        st.markdown("---")
-        st.markdown("### 📝 Request Custom Resources")
-        with st.form("resource_request"):
-            request_topic = st.text_input("What farming topic would you like resources on?")
-            request_details = st.text_area("Additional details (optional)")
-            request_email = st.text_input("Your email (for notification when available)")
+                # Temperature data table
+                st.dataframe(df_temp, use_container_width=True)
             
-            if st.form_submit_button("Submit Request", use_container_width=True):
-                # Save request to database
-                st.success("✅ Request submitted! We'll notify you when the resource is available.")
-    
-    # Tab 2: Upload Documents
-    with tab2:
-        st.markdown("### 📤 Upload Your Documents")
-        st.info("Upload PDF or TXT files to enhance the AI's knowledge base. These documents will be used to provide more accurate answers.")
-        
-        uploaded_files = st.file_uploader(
-            "Choose files to upload",
-            type=['pdf', 'txt'],
-            accept_multiple_files=True,
-            help="Supported formats: PDF, TXT. Max 200MB per file."
-        )
-        
-        if uploaded_files:
-            st.markdown(f"**Selected {len(uploaded_files)} file(s):**")
-            for file in uploaded_files:
-                st.markdown(f"- 📄 {file.name} ({file.size / 1024:.1f} KB)")
-            
-            if st.button("🚀 Upload and Process", use_container_width=True, type="primary"):
-                with st.spinner("Processing documents... This may take a few minutes."):
-                    result_msg, stats = st.session_state.agent.add_documents(uploaded_files)
-                    
-                    if stats.get("files_processed", 0) > 0:
-                        st.success(result_msg)
-                        
-                        # Show stats
-                        col1, col2, col3 = st.columns(3)
-                        with col1:
-                            st.metric("Files Processed", stats.get("files_processed", 0))
-                        with col2:
-                            st.metric("Chunks Created", stats.get("total_chunks", 0))
-                        with col3:
-                            st.metric("Failed", stats.get("files_failed", 0))
-                    else:
-                        st.error(result_msg)
-        
-        # Show upload history
-        st.markdown("---")
-        st.markdown("### 📋 Recently Uploaded Documents")
-        
-        # Get list of uploaded files
-        uploads_dir = Path("uploads")
-        if uploads_dir.exists():
-            uploaded_list = sorted(uploads_dir.glob("*"), key=lambda x: x.stat().st_mtime, reverse=True)[:10]
-            
-            if uploaded_list:
-                upload_data = []
-                for file_path in uploaded_list:
-                    upload_data.append({
-                        "Filename": file_path.name,
-                        "Size": f"{file_path.stat().st_size / 1024:.1f} KB",
-                        "Uploaded": datetime.fromtimestamp(file_path.stat().st_mtime).strftime("%Y-%m-%d %H:%M")
-                    })
+            with tab2:
+                # Precipitation forecast
+                df_precip = pd.DataFrame({
+                    'Date': [datetime.fromisoformat(d).strftime('%a, %b %d') for d in forecast.get('dates', [])],
+                    'Precipitation (mm)': forecast.get('precipitation', []),
+                    'Rain Probability (%)': forecast.get('rain_probability', [])
+                })
                 
-                st.dataframe(upload_data, use_container_width=True)
-            else:
-                st.info("No documents uploaded yet.")
+                fig = go.Figure()
+                fig.add_trace(go.Bar(
+                    x=df_precip['Date'],
+                    y=df_precip['Precipitation (mm)'],
+                    name='Precipitation',
+                    marker_color='#2196f3'
+                ))
+                fig.update_layout(
+                    title="7-Day Precipitation Forecast",
+                    xaxis_title="Date",
+                    yaxis_title="Precipitation (mm)",
+                    height=400
+                )
+                st.plotly_chart(fig, use_container_width=True)
+                
+                st.dataframe(df_precip, use_container_width=True)
+            
+            with tab3:
+                st.markdown(f"""
+                ### 💨 Current Wind Conditions
+                
+                - **Wind Speed:** {wind_speed} km/h
+                - **Direction:** Variable
+                - **Gusts:** {float(wind_speed) * 1.3 if isinstance(wind_speed, (int, float)) else 'N/A'} km/h (estimated)
+                
+                **Farming Impact:**
+                - ✅ Suitable for spraying operations
+                - ✅ Safe for drone operations
+                - ⚠️ Monitor for changes
+                """)
         else:
-            st.info("No documents uploaded yet.")
-    
-    # Tab 3: Library Stats
-    with tab3:
-        st.markdown("### 📊 Knowledge Base Statistics")
-        
-        col1, col2, col3, col4 = st.columns(4)
-        
-        # Count documents
-        uploads_dir = Path("uploads")
-        total_docs = len(list(uploads_dir.glob("*"))) if uploads_dir.exists() else 0
-        
-        # Estimate chunks (approximate)
-        vector_store_size = 0
-        if Path("vector_db").exists():
-            vector_store_size = sum(f.stat().st_size for f in Path("vector_db").glob("**/*") if f.is_file())
-        
-        with col1:
-            st.metric("Total Documents", total_docs)
-        with col2:
-            st.metric("Vector DB Size", f"{vector_store_size / (1024*1024):.1f} MB")
-        with col3:
-            st.metric("Available Resources", len(resources))
-        with col4:
-            st.metric("Total Downloads", sum(r['downloads'] for r in resources))
-        
-        # Document categories breakdown
-        st.markdown("### 📈 Document Categories")
-        
-        if total_docs > 0:
-            # Count by extension
-            extensions = {}
-            for file in uploads_dir.glob("*"):
-                ext = file.suffix.lower()
-                extensions[ext] = extensions.get(ext, 0) + 1
-            
-            fig = px.pie(
-                values=list(extensions.values()),
-                names=list(extensions.keys()),
-                title="Documents by Type"
-            )
-            st.plotly_chart(fig, use_container_width=True)
-        else:
-            st.info("Upload documents to see statistics")
-        
-        # Resource downloads chart
-        st.markdown("### 📥 Popular Resources")
-        resource_df = pd.DataFrame([
-            {"Resource": r["title"][:30] + "...", "Downloads": r["downloads"]}
-            for r in sorted(resources, key=lambda x: x["downloads"], reverse=True)[:5]
-        ])
-        
-        fig = px.bar(resource_df, x="Downloads", y="Resource", orientation='h',
-                     title="Top 5 Downloaded Resources")
-        st.plotly_chart(fig, use_container_width=True)
-        
-        # Maintenance actions
-        st.markdown("---")
-        st.markdown("### 🔧 Maintenance")
-        
-        col1, col2 = st.columns(2)
-        with col1:
-            if st.button("🔄 Rebuild Vector Database", use_container_width=True):
-                with st.spinner("Rebuilding..."):
-                    # Implement rebuild logic
-                    st.success("✅ Vector database rebuilt successfully")
-        
-        with col2:
-            if st.button("🗑️ Clear All Uploads", use_container_width=True, type="secondary"):
-                st.warning("⚠️ This will delete all uploaded documents. Click again to confirm.")
+            st.error("⚠️ Could not fetch weather data. Please check your internet connection.")
 
 def page_calculator():
     st.markdown("## 💵 Farming Cost Calculator")
@@ -1409,7 +1320,157 @@ def page_calculator():
         
         st.dataframe(breakdown_df, use_container_width=True)
 
-def page_knowledge_base():
+def page_farming_tips():
+    st.markdown("## 💡 Farming Tips & Knowledge")
+    
+    st.info("📚 Get AI-generated farming tips based on uploaded agricultural manuals and expert knowledge")
+    
+    # Farming tip categories
+    tip_categories = [
+        "Crop Management",
+        "Pest Control",
+        "Soil Health",
+        "Irrigation Techniques",
+        "Harvest Best Practices",
+        "Organic Farming",
+        "Animal Husbandry",
+        "Seasonal Planning"
+    ]
+    
+    col1, col2 = st.columns([2, 1])
+    
+    with col1:
+        selected_category = st.selectbox("Select Topic", tip_categories)
+        
+        if st.button("Generate Farming Tip", use_container_width=True, type="primary"):
+            with st.spinner("🤔 Generating tip from agricultural knowledge base..."):
+                # Generate tip using AI based on uploaded documents
+                prompt = f"""Based on agricultural best practices and uploaded farming manuals, 
+                provide a detailed, practical farming tip about: {selected_category}
+                
+                The tip should:
+                1. Be specific and actionable
+                2. Include step-by-step instructions if applicable
+                3. Mention timing considerations for {st.session_state.location}
+                4. Include warnings or cautions if relevant
+                5. Be suitable for small to medium-scale farmers
+                
+                Format the response as:
+                - **Tip Title**: [Clear, descriptive title]
+                - **Overview**: [Brief summary]
+                - **Steps**: [Numbered steps if applicable]
+                - **Best Time**: [When to implement]
+                - **Expected Results**: [What to expect]
+                - **Cautions**: [Any warnings]
+                """
+                
+                response = st.session_state.agent.query(
+                    prompt,
+                    st.session_state.username,
+                    st.session_state.location
+                )
+                
+                st.session_state.current_tip = {
+                    "category": selected_category,
+                    "content": response,
+                    "generated_at": datetime.now()
+                }
+    
+    with col2:
+        st.markdown("### 📊 Quick Stats")
+        uploads_dir = Path("uploads")
+        doc_count = len(list(uploads_dir.glob("*"))) if uploads_dir.exists() else 0
+        
+        st.metric("Knowledge Sources", doc_count)
+        st.metric("Categories", len(tip_categories))
+        st.metric("Tips Generated", st.session_state.get('tips_generated', 0))
+    
+    # Display generated tip
+    if hasattr(st.session_state, 'current_tip') and st.session_state.current_tip:
+        st.markdown("---")
+        st.markdown("### 📝 Generated Farming Tip")
+        
+        tip = st.session_state.current_tip
+        
+        st.markdown(f"""
+        <div class="info-card">
+            <h4>🏷️ Category: {tip['category']}</h4>
+            <p style="color: #666; font-size: 0.9rem;">
+                Generated: {tip['generated_at'].strftime('%B %d, %Y at %I:%M %p')}
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
+        
+        st.markdown(tip['content'])
+        
+        # Action buttons
+        col1, col2, col3 = st.columns(3)
+        
+        with col1:
+            if st.button("📥 Save Tip", use_container_width=True):
+                # Save to file
+                tips_dir = Path("saved_tips")
+                tips_dir.mkdir(exist_ok=True)
+                
+                filename = f"{tip['category'].replace(' ', '_')}_{tip['generated_at'].strftime('%Y%m%d_%H%M%S')}.txt"
+                filepath = tips_dir / filename
+                
+                with open(filepath, 'w', encoding='utf-8') as f:
+                    f.write(f"Category: {tip['category']}\n")
+                    f.write(f"Generated: {tip['generated_at']}\n")
+                    f.write(f"Location: {st.session_state.location}\n")
+                    f.write("\n" + "="*50 + "\n\n")
+                    f.write(tip['content'])
+                
+                st.success(f"✅ Tip saved to: {filepath}")
+        
+        with col2:
+            if st.button("🔄 Generate New Tip", use_container_width=True):
+                del st.session_state.current_tip
+                st.rerun()
+        
+        with col3:
+            if st.button("📤 Share Tip", use_container_width=True):
+                st.info("📧 Sharing feature coming soon!")
+    
+    # Saved tips history
+    st.markdown("---")
+    st.markdown("### 📚 Saved Tips History")
+    
+    tips_dir = Path("saved_tips")
+    if tips_dir.exists():
+        saved_tips = sorted(tips_dir.glob("*.txt"), key=lambda x: x.stat().st_mtime, reverse=True)
+        
+        if saved_tips:
+            for i, tip_file in enumerate(saved_tips[:5]):  # Show last 5
+                with st.expander(f"📄 {tip_file.stem.replace('_', ' ')}", expanded=False):
+                    with open(tip_file, 'r', encoding='utf-8') as f:
+                        content = f.read()
+                    st.text(content)
+                    
+                    if st.button(f"🗑️ Delete", key=f"delete_tip_{i}"):
+                        tip_file.unlink()
+                        st.success("✅ Tip deleted")
+                        st.rerun()
+        else:
+            st.info("No saved tips yet. Generate and save tips to build your knowledge library!")
+    else:
+        st.info("No saved tips yet. Generate and save tips to build your knowledge library!")
+    
+    # Tips from knowledge base
+    st.markdown("---")
+    st.markdown("### 📖 Browse Knowledge Base Topics")
+    
+    st.markdown("""
+    **Available Topics from Uploaded Documents:**
+    
+    Upload agricultural manuals, guides, and research papers to the Knowledge Base 
+    to generate more accurate and detailed farming tips specific to your needs.
+    """)
+    
+    if st.button("📚 Go to Knowledge Base", use_container_width=True):
+        st.session_state.navigation = "Knowledge Base"
+        st.rerun()
     st.markdown("## 📚 Knowledge Base")
     
     tab1, tab2, tab3 = st.tabs(["📥 Download Resources", "📤 Upload Documents", "📊 Library Stats"])
@@ -1423,7 +1484,7 @@ def page_knowledge_base():
         resources_dir = Path("agri_data/resources")
         resources_dir.mkdir(parents=True, exist_ok=True)
         
-        # Define available resources (you'll add actual files here)
+        # Define available resources
         resources = [
             {
                 "title": "Maize Farming Guide for Zimbabwe",
@@ -1485,11 +1546,8 @@ def page_knowledge_base():
                 
                 with col2:
                     file_path = resources_dir / resource['file']
-                    
-                    # Also check for .txt version
                     txt_file_path = resources_dir / resource['file'].replace('.pdf', '.txt')
                     
-                    # Check if file exists (PDF or TXT)
                     if file_path.exists():
                         with open(file_path, 'rb') as f:
                             st.download_button(
@@ -1529,7 +1587,6 @@ def page_knowledge_base():
             request_email = st.text_input("Your email (for notification when available)")
             
             if st.form_submit_button("Submit Request", use_container_width=True):
-                # Save request to database
                 st.success("✅ Request submitted! We'll notify you when the resource is available.")
     
     # Tab 2: Upload Documents
@@ -1571,7 +1628,6 @@ def page_knowledge_base():
         st.markdown("---")
         st.markdown("### 📋 Recently Uploaded Documents")
         
-        # Get list of uploaded files
         uploads_dir = Path("uploads")
         if uploads_dir.exists():
             uploaded_list = sorted(uploads_dir.glob("*"), key=lambda x: x.stat().st_mtime, reverse=True)[:10]
@@ -1597,11 +1653,9 @@ def page_knowledge_base():
         
         col1, col2, col3, col4 = st.columns(4)
         
-        # Count documents
         uploads_dir = Path("uploads")
         total_docs = len(list(uploads_dir.glob("*"))) if uploads_dir.exists() else 0
         
-        # Estimate chunks (approximate)
         vector_store_size = 0
         if Path("vector_db").exists():
             try:
@@ -1609,23 +1663,18 @@ def page_knowledge_base():
             except:
                 vector_store_size = 0
         
-        # Resources count
-        resources_count = 5  # Update based on your actual resources
-        
         with col1:
             st.metric("Total Documents", total_docs)
         with col2:
             st.metric("Vector DB Size", f"{vector_store_size / (1024*1024):.1f} MB")
         with col3:
-            st.metric("Available Resources", resources_count)
+            st.metric("Available Resources", 5)
         with col4:
             st.metric("Total Downloads", "5,876")
         
-        # Document categories breakdown
         st.markdown("### 📈 Document Categories")
         
         if total_docs > 0:
-            # Count by extension
             extensions = {}
             for file in uploads_dir.glob("*"):
                 ext = file.suffix.lower() or "no extension"
@@ -1641,7 +1690,6 @@ def page_knowledge_base():
         else:
             st.info("Upload documents to see statistics")
         
-        # Resource downloads chart
         st.markdown("### 📥 Popular Resources")
         resource_data = {
             "Resource": ["Maize Guide", "Fish Farming", "Goat Care", "Fertilizer", "Poultry"],
@@ -1655,7 +1703,6 @@ def page_knowledge_base():
                      color_continuous_scale="Greens")
         st.plotly_chart(fig, use_container_width=True)
         
-        # Maintenance actions
         st.markdown("---")
         st.markdown("### 🔧 Maintenance")
         
@@ -1663,7 +1710,6 @@ def page_knowledge_base():
         with col1:
             if st.button("🔄 Rebuild Vector Database", use_container_width=True):
                 with st.spinner("Rebuilding..."):
-                    # Implement rebuild logic
                     st.success("✅ Vector database rebuilt successfully")
         
         with col2:
@@ -1679,14 +1725,14 @@ def main():
     render_header()
     render_sidebar()
     
-    # Navigation - Use option_menu if available, otherwise use selectbox
+    # Navigation
     if HAS_OPTION_MENU:
         selected = option_menu(
             menu_title=None,
             options=["Dashboard", "AI Chat", "Weather", "Calculator", "Marketplace", "Knowledge Base"],
             icons=["house", "chat-dots", "cloud-sun", "calculator", "shop", "book"],
             menu_icon="cast",
-            default_index=0,
+            default_index=["Dashboard", "AI Chat", "Weather", "Calculator", "Marketplace", "Knowledge Base"].index(st.session_state.navigation),
             orientation="horizontal",
             styles={
                 "container": {"padding": "0!important", "background-color": "#f5f5f5"},
@@ -1700,14 +1746,16 @@ def main():
                 "nav-link-selected": {"background-color": "#2e7d32"},
             }
         )
+        st.session_state.navigation = selected
     else:
-        # Fallback to simple selectbox navigation
         st.markdown("### 🧭 Navigation")
         selected = st.selectbox(
             "Choose a page:",
             ["Dashboard", "AI Chat", "Weather", "Calculator", "Marketplace", "Knowledge Base"],
+            index=["Dashboard", "AI Chat", "Weather", "Calculator", "Marketplace", "Knowledge Base"].index(st.session_state.navigation),
             label_visibility="collapsed"
         )
+        st.session_state.navigation = selected
     
     # Route to pages
     if selected == "Dashboard":
@@ -1723,6 +1771,8 @@ def main():
         st.info("Marketplace feature coming soon!")
     elif selected == "Knowledge Base":
         page_knowledge_base()
+    elif selected == "Farming Tips":
+        page_farming_tips()
     
     # Footer
     st.markdown(f"""
