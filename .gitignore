@@ -12,3 +12,8 @@ node_modules/
 
 # Logs
 *.log
+*.db
+*.sqlite3
+uploads/
+.gradio/certificate.pem
+vector_db/
